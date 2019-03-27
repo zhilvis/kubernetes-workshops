@@ -32,7 +32,7 @@ spec:
       - name: logdir
         emptyDir: {}
       containers:
-      - image: gcr.io/google-samples/lobsters-db:1.0
+      - image: gcr.io/google-samples/lobsters-db:2.0
         name: lobsters
         env:
         - name: DB_HOST

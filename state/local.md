@@ -50,26 +50,7 @@ kubectl delete deployment lobsters
 deployment "lobsters" deleted
 ```
 
-### External Database
-
-An easy way to move an existing app to Kubernetes, is to leave the
-database where it is. To try this out, we can start up a Lobsters pod
-that talks to an external MySQL database.
-
-We have a new container
-`gcr.io/google-samples/lobsters-db:1.0`. Source is under
-[lobsters-db/](lobsters-db/). This container is configured to use the
-environment variables `DB_HOST` and `DB_PASSWORD` to connect to a
-MySQL database server. The username and port are hard coded to "root"
-and 3306.
-
-Edit [frontend-external.yaml](frontend-external.yaml) in your favorite
-editor. Notice how we are setting the environment variables in the
-`env:` section. Change the value of the `DB_HOST` variable to an
-existing MySQL server, and save the file. Leave the configuration of
-the password variable alone, It is set up to use a Kubernetes Secret
-to retrieve the password. This is more secure than specifying the
-password in the Deployment configuration.
+### Run MySQL in Kubernetes
 
 Create the Secret using the below command. Change `mypassword` to be
 the actual password to the external MySQL server.
@@ -92,68 +73,6 @@ secret "db-pass" created
 > ```
 > secret "db-pass" created
 > ```
-
-Now you can create the Lobsters deployment that connects to the
-external MySQL server:
-
-```
-kubectl create -f ./frontend-external.yaml
-```
-```
-deployment "lobsters" created
-```
-
-About Rails: it needs the database set up using a few `rake`
-commands. These need to be run using the app code. To do this, we will
-exec a bash shell inside one of our frontend pods. First, find the
-name of any one of your frontend pods:
-
-```
-kubectl get pods
-```
-```
-NAME                            READY     STATUS    RESTARTS   AGE
-lobsters-3566082729-3j2mv       1/1       Running   0          3m
-lobsters-3566082729-4wup5       1/1       Running   0          3m
-lobsters-3566082729-8cxp0       1/1       Running   0          3m
-lobsters-3566082729-add2d       1/1       Running   0          3m
-lobsters-3566082729-sepki       1/1       Running   0          3m
-```
-
-Then, exec the shell.
-
-```
-kubectl exec -it lobsters-3566082729-3j2mv -- /bin/bash
-```
-```
-root@lobsters-3566082729-3j2mv:/app#
-```
-
-Now inside the `/app` dir, run the rake command:
-
-```
-bundle exec rake db:create db:schema:load db:seed
-```
-```
-<db output>
-```
-
-Then exit the shell.
-
-Check the site, now you can log in and create stories, and no matter
-which replica you visit, you'll see the same data.
-
-
-Delete the deployment to move to the next step:
-
-```
-kubectl delete deployment lobsters
-```
-```
-deployment "lobsters" deleted
-```
-
-### Run MySQL in Kubernetes
 
 Look through [database.yaml](database.yaml). This config creates a
 MySQL Deployment and Service. It uses the standard
@@ -183,7 +102,7 @@ kubectl create -f ./frontend-dep.yaml
 deployment "lobsters" created
 ```
 
-This time, to run the rake commands we will re-use the `lobsters-db`
+To run the rake commands we will use the `lobsters-db`
 container image, but specify an alternate command in the Kubernetes
 config. Because we only want this command to run once and exit, we use
 the Kubernetes Job object. See [rake-db.yaml](rake-db.yaml) for the

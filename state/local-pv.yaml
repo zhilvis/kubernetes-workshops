@@ -9,5 +9,6 @@ spec:
     storage: 20Gi
   accessModes:
   - ReadWriteOnce
+  storageClassName: hostpath
   hostPath:
     path: /tmp/mysql-disk
